@@ -8,34 +8,56 @@ type GraphqlResponse<T> = {
   errors?: Array<{ message: string }>;
 };
 
+function isJwtExpiredError(message: string): boolean {
+  return message.includes('JWTExpired') || message.includes('Could not verify JWT');
+}
+
 export async function nhostGraphqlRequest<T>(
   query: string,
   variables?: Record<string, unknown>,
 ): Promise<T> {
-  const session = nhostBrowser.getUserSession();
+  let session = await nhostBrowser.refreshSession();
   if (!session?.accessToken) {
     throw new Error('Not authenticated');
   }
 
-  const { data } = await axios.post<GraphqlResponse<T>>(
-    nhostBrowser.graphql.url,
-    { query, variables },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.accessToken}`,
-        'x-hasura-role': 'staff_admin',
+  async function post(currentSession: NonNullable<typeof session>) {
+    const { data } = await axios.post<GraphqlResponse<T>>(
+      nhostBrowser.graphql.url,
+      { query, variables },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentSession.accessToken}`,
+          'x-hasura-role': 'staff_admin',
+        },
       },
-    },
-  );
+    );
 
-  if (data.errors?.length) {
-    throw new Error(data.errors.map((error) => error.message).join('; '));
+    if (data.errors?.length) {
+      throw new Error(data.errors.map((error) => error.message).join('; '));
+    }
+
+    if (!data.data) {
+      throw new Error('GraphQL response missing data');
+    }
+
+    return data.data;
   }
 
-  if (!data.data) {
-    throw new Error('GraphQL response missing data');
-  }
+  try {
+    return await post(session);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    if (!isJwtExpiredError(message)) {
+      throw error;
+    }
 
-  return data.data;
+    session = await nhostBrowser.refreshSession(0);
+    if (!session?.accessToken) {
+      throw new Error('Session expired');
+    }
+
+    return post(session);
+  }
 }

@@ -1,25 +1,26 @@
 import 'server-only';
 
-import { createNhostServerClient } from '@/lib/nhost-server';
+import type { AdminRole } from '@/lib/auth/session';
+import { ensureServerSession } from '@/lib/nhost-server';
 
 type GraphqlBody<T> = {
   data?: T;
   errors?: Array<{ message: string }>;
 };
 
-export type AdminRole = 'staff_admin' | 'moderator';
+export type { AdminRole };
 
-export async function graphqlAsAdmin<T>(
+function isJwtExpiredError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return error.message.includes('JWTExpired') || error.message.includes('Could not verify JWT');
+}
+
+async function executeGraphql<T>(
+  nhost: Awaited<ReturnType<typeof ensureServerSession>>['nhost'],
   query: string,
-  variables?: Record<string, unknown>,
-  role: AdminRole = 'staff_admin',
+  variables: Record<string, unknown> | undefined,
+  role: AdminRole,
 ): Promise<T> {
-  const nhost = await createNhostServerClient();
-  const session = nhost.getUserSession();
-  if (!session) {
-    throw new Error('Not authenticated');
-  }
-
   const { body } = await nhost.graphql.request(
     { query, variables },
     {
@@ -39,4 +40,31 @@ export async function graphqlAsAdmin<T>(
   }
 
   return parsed.data;
+}
+
+export async function graphqlAsAdmin<T>(
+  query: string,
+  variables?: Record<string, unknown>,
+  role: AdminRole = 'staff_admin',
+): Promise<T> {
+  const { nhost, session: initialSession } = await ensureServerSession();
+  let session = initialSession;
+  if (!session) {
+    throw new Error('Not authenticated');
+  }
+
+  try {
+    return await executeGraphql<T>(nhost, query, variables, role);
+  } catch (error) {
+    if (!isJwtExpiredError(error)) {
+      throw error;
+    }
+
+    session = await nhost.refreshSession(0);
+    if (!session) {
+      throw new Error('Session expired');
+    }
+
+    return executeGraphql<T>(nhost, query, variables, role);
+  }
 }

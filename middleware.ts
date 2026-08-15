@@ -1,46 +1,77 @@
+import { createServerClient } from '@nhost/nhost-js';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getAdminRoleFromSession, SESSION_COOKIE_OPTIONS } from '@/lib/auth/session';
+import { env } from '@/lib/env';
 import { NHOST_SESSION_KEY, parseStoredSession } from '@/lib/nhost-cookie-storage';
 
-const HASURA_CLAIMS_KEY = 'https://hasura.io/jwt/claims';
 const PUBLIC_PATHS = ['/login'];
 
-function hasAdminRole(session: ReturnType<typeof parseStoredSession>): boolean {
-  if (!session?.decodedToken) return false;
-  const claims = session.decodedToken[HASURA_CLAIMS_KEY] as
-    | Record<string, string | string[]>
-    | undefined;
-  const allowedRoles = Array.isArray(claims?.['x-hasura-allowed-roles'])
-    ? claims['x-hasura-allowed-roles']
-    : typeof claims?.['x-hasura-allowed-roles'] === 'string'
-      ? [claims['x-hasura-allowed-roles']]
-      : [];
-  return allowedRoles.includes('staff_admin') || allowedRoles.includes('moderator');
+function clearSessionCookie(response: NextResponse) {
+  response.cookies.delete(NHOST_SESSION_KEY);
 }
 
-export function middleware(request: NextRequest) {
+function redirectToLogin(request: NextRequest, pathname: string) {
+  const loginUrl = new URL('/login', request.url);
+  loginUrl.searchParams.set('next', pathname);
+  loginUrl.searchParams.set('reason', 'session_expired');
+  const response = NextResponse.redirect(loginUrl);
+  clearSessionCookie(response);
+  return response;
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
   const isApi = pathname.startsWith('/api/');
-  const session = parseStoredSession(request.cookies.get(NHOST_SESSION_KEY)?.value);
-  const isAdmin = hasAdminRole(session);
+
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const nhost = createServerClient({
+    subdomain: env.NEXT_PUBLIC_NHOST_SUBDOMAIN,
+    region: env.NEXT_PUBLIC_NHOST_REGION,
+    authUrl: env.NEXT_PUBLIC_NHOST_AUTH_URL,
+    graphqlUrl: env.NEXT_PUBLIC_NHOST_GRAPHQL_URL,
+    storageUrl: env.NEXT_PUBLIC_NHOST_STORAGE_URL,
+    functionsUrl: env.NEXT_PUBLIC_NHOST_FUNCTIONS_URL,
+    storage: {
+      get: () => parseStoredSession(request.cookies.get(NHOST_SESSION_KEY)?.value),
+      set: (value) => {
+        response.cookies.set(NHOST_SESSION_KEY, JSON.stringify(value), SESSION_COOKIE_OPTIONS);
+      },
+      remove: () => {
+        clearSessionCookie(response);
+      },
+    },
+  });
 
   if (isPublic) {
-    if (isAdmin && pathname === '/login') {
-      return NextResponse.redirect(new URL('/', request.url));
+    if (pathname === '/login') {
+      const session = await nhost.refreshSession();
+      const adminRole = getAdminRoleFromSession(session);
+      if (adminRole) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
     }
-    return NextResponse.next();
+    return response;
   }
 
-  if (!isAdmin) {
+  const session = await nhost.refreshSession();
+  const adminRole = getAdminRoleFromSession(session);
+
+  if (!adminRole) {
     if (isApi) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const unauthorized = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      clearSessionCookie(unauthorized);
+      return unauthorized;
     }
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('next', pathname);
-    return NextResponse.redirect(loginUrl);
+    return redirectToLogin(request, pathname);
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

@@ -14,6 +14,7 @@ export function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const sessionExpired = searchParams.get('reason') === 'session_expired';
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -68,6 +69,11 @@ export function LoginForm() {
               required
             />
           </div>
+          {sessionExpired ? (
+            <p className="text-sm text-amber-700">
+              Your session expired. Sign in again to continue.
+            </p>
+          ) : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign in'}
