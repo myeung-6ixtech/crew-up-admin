@@ -1,0 +1,47 @@
+export const APP_CONSTANTS = {
+  eventTags: [
+    'alcohol_free',
+    'halal_friendly',
+    'women_only',
+    'karaoke',
+    'dinner',
+    'coffee',
+    'hiking',
+  ],
+  roleTypes: ['cabin_crew', 'pilot', 'ground_ops'],
+  visibilityLevels: [
+    'off',
+    'friends',
+    'friends_of_friends',
+    'same_airline',
+    'all_verified',
+  ],
+  eventVisibilityScopes: ['friends', 'same_airline', 'all_verified'],
+  airportCount: 90,
+} as const;
+
+export const POSTGRES_ENUMS = {
+  role_type: ['cabin_crew', 'pilot', 'ground_ops'],
+  visibility_level: [
+    'off',
+    'friends',
+    'friends_of_friends',
+    'same_airline',
+    'all_verified',
+  ],
+  verification_method: ['airline_email', 'id_upload', 'manual'],
+  verification_status: ['pending', 'approved', 'rejected'],
+  roster_source: ['upload', 'manual', 'airline_portal'],
+  connection_status: ['pending', 'accepted'],
+  event_visibility: ['friends', 'same_airline', 'all_verified'],
+  attendee_status: ['going', 'waitlisted', 'cancelled'],
+  thread_type: ['direct', 'event_group'],
+  notification_type: [
+    'beacon',
+    'event_reminder',
+    'connection_request',
+    'moderation',
+    'message',
+  ],
+  report_status: ['open', 'reviewing', 'resolved', 'dismissed'],
+} as const;
