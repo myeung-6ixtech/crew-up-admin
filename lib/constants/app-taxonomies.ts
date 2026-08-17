@@ -8,6 +8,14 @@ export const APP_CONSTANTS = {
     'coffee',
     'hiking',
   ],
+  activityCategories: [
+    'food_drink',
+    'outdoors',
+    'nightlife',
+    'wellness',
+    'culture',
+    'general',
+  ],
   roleTypes: ['cabin_crew', 'pilot', 'ground_ops'],
   visibilityLevels: [
     'off',

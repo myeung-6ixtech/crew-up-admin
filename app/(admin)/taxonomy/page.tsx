@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plane, Variable } from 'lucide-react';
+import { Calendar, Plane, Variable } from 'lucide-react';
 
 const taxonomySections = [
   {
@@ -8,6 +8,12 @@ const taxonomySections = [
     title: 'Airlines',
     description: 'Carrier codes, names, and email domains for verification.',
     icon: Plane,
+  },
+  {
+    href: '/taxonomy/activities',
+    title: 'Activities',
+    description: 'Activity types for events and user layover preferences.',
+    icon: Calendar,
   },
   {
     href: '/taxonomy/variables',

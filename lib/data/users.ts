@@ -27,7 +27,7 @@ const LIST_USERS_QUERY = `
       order_by: { createdAt: desc }
       where: {
         _or: [
-          { email: { _ilike: $search } }
+          { email: { _cast: { String: { _ilike: $search } } } }
           { displayName: { _ilike: $search } }
         ]
       }
@@ -50,7 +50,7 @@ const LIST_USERS_QUERY = `
     usersAggregate(
       where: {
         _or: [
-          { email: { _ilike: $search } }
+          { email: { _cast: { String: { _ilike: $search } } } }
           { displayName: { _ilike: $search } }
         ]
       }
