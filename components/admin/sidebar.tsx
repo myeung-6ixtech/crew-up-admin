@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Plane, Settings, Users } from 'lucide-react';
+import { BarChart3, Calendar, Plane, Settings, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: BarChart3 },
   { href: '/users', label: 'Users', icon: Users },
+  { href: '/events', label: 'Events', icon: Calendar },
   { href: '/taxonomy', label: 'Taxonomy', icon: Plane },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

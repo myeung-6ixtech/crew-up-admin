@@ -20,15 +20,15 @@ export type AdminUser = {
 };
 
 const LIST_USERS_QUERY = `
-  query ListUsers($limit: Int!, $offset: Int!, $search: String!) {
+  query ListUsers($limit: Int!, $offset: Int!, $searchCitext: citext!, $searchText: String!) {
     users(
       limit: $limit
       offset: $offset
       order_by: { createdAt: desc }
       where: {
         _or: [
-          { email: { _cast: { String: { _ilike: $search } } } }
-          { displayName: { _ilike: $search } }
+          { email: { _ilike: $searchCitext } }
+          { displayName: { _ilike: $searchText } }
         ]
       }
     ) {
@@ -50,8 +50,8 @@ const LIST_USERS_QUERY = `
     usersAggregate(
       where: {
         _or: [
-          { email: { _cast: { String: { _ilike: $search } } } }
-          { displayName: { _ilike: $search } }
+          { email: { _ilike: $searchCitext } }
+          { displayName: { _ilike: $searchText } }
         ]
       }
     ) {
@@ -102,7 +102,8 @@ export async function getUsers(options?: {
   const data = await graphqlAsAdmin<ListUsersResponse>(LIST_USERS_QUERY, {
     limit: options?.limit ?? 25,
     offset: options?.offset ?? 0,
-    search: pattern,
+    searchCitext: pattern,
+    searchText: pattern,
   });
 
   return {
