@@ -3,9 +3,16 @@ import { getEventTagUsage } from '@/lib/data/airlines';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
+import { ListPagination, paginate, parsePage } from '@/components/admin/list-pagination';
 
-export default async function VariablesTaxonomyPage() {
+export default async function VariablesTaxonomyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
   const tagUsage = await getEventTagUsage();
+  const pagedTags = paginate(tagUsage, parsePage(page));
 
   return (
     <div className="space-y-6">
@@ -88,21 +95,39 @@ export default async function VariablesTaxonomyPage() {
               </TR>
             </THead>
             <TBody>
-              {tagUsage.map((entry) => (
-                <TR key={entry.tag}>
-                  <TD>{entry.tag}</TD>
-                  <TD>{entry.count}</TD>
-                  <TD>
-                    {APP_CONSTANTS.eventTags.includes(entry.tag as (typeof APP_CONSTANTS.eventTags)[number]) ? (
-                      <Badge variant="success">Yes</Badge>
-                    ) : (
-                      <Badge variant="warning">No</Badge>
-                    )}
+              {pagedTags.items.length ? (
+                pagedTags.items.map((entry) => (
+                  <TR key={entry.tag}>
+                    <TD>{entry.tag}</TD>
+                    <TD>{entry.count}</TD>
+                    <TD>
+                      {APP_CONSTANTS.eventTags.includes(entry.tag as (typeof APP_CONSTANTS.eventTags)[number]) ? (
+                        <Badge variant="success">Yes</Badge>
+                      ) : (
+                        <Badge variant="warning">No</Badge>
+                      )}
+                    </TD>
+                  </TR>
+                ))
+              ) : (
+                <TR>
+                  <TD colSpan={3} className="text-zinc-500">
+                    No event tags in use.
                   </TD>
                 </TR>
-              ))}
+              )}
             </TBody>
           </Table>
+          <div className="mt-4">
+            <ListPagination
+              page={pagedTags.page}
+              pages={pagedTags.pages}
+              from={pagedTags.from}
+              to={pagedTags.to}
+              total={pagedTags.total}
+              path="/taxonomy/variables"
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

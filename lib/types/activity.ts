@@ -3,7 +3,10 @@ export type Activity = {
   slug: string;
   name: string;
   description: string | null;
+  /** Slug of the group, or the row's own slug when it is a group. Kept by a database trigger. */
   category: string;
+  parent_id: string | null;
+  kind: 'activity' | 'interest';
   icon: string | null;
   sort_order: number;
   is_active: boolean;

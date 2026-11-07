@@ -27,7 +27,7 @@ export default async function EditEventPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/events" className="text-sm text-zinc-500 hover:text-zinc-800">
+        <Link href="/events/events-list" className="text-sm text-zinc-500 hover:text-zinc-800">
           ← Back to events
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Edit {event.title}</h1>

@@ -27,24 +27,6 @@ export default async function DashboardPage() {
         <StatCard title="Pending verifications" value={metrics.growth.pendingVerifications} />
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Events" value={metrics.engagement.totalEvents} />
-        <StatCard title="RSVPs" value={metrics.engagement.totalRsvps} />
-        <StatCard title="Messages" value={metrics.engagement.totalMessages} />
-        <StatCard
-          title="Accepted connections"
-          value={metrics.engagement.acceptedConnections}
-          hint={`${metrics.engagement.totalConnections} total requests`}
-        />
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Open reports" value={metrics.safety.openReports} />
-        <StatCard title="Reviewing reports" value={metrics.safety.reviewingReports} />
-        <StatCard title="Resolved reports" value={metrics.safety.resolvedReports} />
-        <StatCard title="User blocks" value={metrics.safety.totalBlocks} />
-      </section>
-
       <DashboardCharts metrics={metrics} />
 
       <Card>

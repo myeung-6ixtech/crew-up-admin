@@ -16,11 +16,11 @@ import {
   parseTags,
   platformEventSchema,
 } from '@/lib/schemas/event.schema';
+import { ActivityPicker } from '@/components/admin/activity-picker-dialog';
 import { Button } from '@/components/ui/button';
 import { Input, Label, Textarea } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 
 function toLocalInputValue(iso: string | null | undefined) {
   if (!iso) return '';
@@ -58,14 +58,6 @@ export function EventEditForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  function toggleActivity(activityId: string) {
-    setSelectedActivities((current) =>
-      current.includes(activityId)
-        ? current.filter((id) => id !== activityId)
-        : [...current, activityId],
-    );
-  }
-
   async function handleSubmit(formEvent: React.FormEvent) {
     formEvent.preventDefault();
     setError(null);
@@ -97,7 +89,7 @@ export function EventEditForm({
         toast.success('Platform event updated');
       }
 
-      router.push('/events');
+      router.push('/events/events-list');
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save event';
@@ -201,30 +193,11 @@ export function EventEditForm({
             />
             <p className="text-xs text-zinc-500">Dietary/safety tags, not activity types.</p>
           </div>
-          <div className="space-y-2">
-            <Label>Activities</Label>
-            <div className="grid gap-2 md:grid-cols-2">
-              {activities.map((activity) => {
-                const selected = selectedActivities.includes(activity.id);
-                return (
-                  <button
-                    key={activity.id}
-                    type="button"
-                    onClick={() => toggleActivity(activity.id)}
-                    className={cn(
-                      'rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-                      selected
-                        ? 'border-zinc-900 bg-zinc-900 text-white'
-                        : 'border-zinc-200 bg-white hover:bg-zinc-50',
-                    )}
-                  >
-                    {activity.icon ? `${activity.icon} ` : ''}
-                    {activity.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <ActivityPicker
+            activities={activities}
+            selectedIds={selectedActivities}
+            onChange={setSelectedActivities}
+          />
           <div className="space-y-2">
             <Label htmlFor="featured_until">Featured until</Label>
             <Input
@@ -243,7 +216,7 @@ export function EventEditForm({
             <Button type="submit" disabled={pending}>
               {pending ? 'Saving…' : mode === 'create' ? 'Create event' : 'Save changes'}
             </Button>
-            <Link href="/events">
+            <Link href="/events/events-list">
               <Button variant="outline" type="button">
                 Cancel
               </Button>

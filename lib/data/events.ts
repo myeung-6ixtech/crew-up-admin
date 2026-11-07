@@ -137,3 +137,47 @@ export async function updatePlatformEvent(
 
   return data.update_events_by_pk;
 }
+
+export type EventAnalytics = {
+  totalEvents: number;
+  totalRsvps: number;
+  publishedEvents: number;
+  upcomingEvents: number;
+  platformEvents: number;
+  userHostedEvents: number;
+};
+
+export async function getEventAnalytics(): Promise<EventAnalytics> {
+  const data = await graphqlAsAdmin<{
+    eventsAggregate: { aggregate: { count: number } | null };
+    rsvpsAggregate: { aggregate: { count: number } | null };
+    publishedAggregate: { aggregate: { count: number } | null };
+    upcomingAggregate: { aggregate: { count: number } | null };
+    platformAggregate: { aggregate: { count: number } | null };
+    userHostedAggregate: { aggregate: { count: number } | null };
+  }>(
+    `
+      query EventAnalytics($now: timestamptz!) {
+        eventsAggregate: events_aggregate { aggregate { count } }
+        rsvpsAggregate: event_attendees_aggregate { aggregate { count } }
+        publishedAggregate: events_aggregate(where: { is_published: { _eq: true } }) { aggregate { count } }
+        upcomingAggregate: events_aggregate(
+          where: { starts_at: { _gte: $now }, cancelled_at: { _is_null: true } }
+        ) { aggregate { count } }
+        platformAggregate: events_aggregate(where: { host_type: { _eq: platform } }) { aggregate { count } }
+        userHostedAggregate: events_aggregate(where: { host_type: { _eq: user } }) { aggregate { count } }
+      }
+    `,
+    { now: new Date().toISOString() },
+  );
+
+  const countOf = (value: { aggregate: { count: number } | null }) => value.aggregate?.count ?? 0;
+  return {
+    totalEvents: countOf(data.eventsAggregate),
+    totalRsvps: countOf(data.rsvpsAggregate),
+    publishedEvents: countOf(data.publishedAggregate),
+    upcomingEvents: countOf(data.upcomingAggregate),
+    platformEvents: countOf(data.platformAggregate),
+    userHostedEvents: countOf(data.userHostedAggregate),
+  };
+}

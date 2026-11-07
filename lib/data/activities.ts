@@ -6,37 +6,30 @@ import type { Activity } from '@/lib/types/activity';
 
 export type { Activity };
 
+const ACTIVITY_FIELDS = `
+  id
+  slug
+  name
+  description
+  category
+  parent_id
+  kind
+  icon
+  sort_order
+  is_active
+  created_at
+  updated_at
+`;
+
 const LIST_ACTIVITIES_QUERY = `
   query ListActivities {
-    activities(order_by: [{ sort_order: asc }, { name: asc }]) {
-      id
-      slug
-      name
-      description
-      category
-      icon
-      sort_order
-      is_active
-      created_at
-      updated_at
-    }
+    activities(order_by: [{ sort_order: asc }, { name: asc }]) { ${ACTIVITY_FIELDS} }
   }
 `;
 
 const GET_ACTIVITY_QUERY = `
   query GetActivity($id: uuid!) {
-    activities_by_pk(id: $id) {
-      id
-      slug
-      name
-      description
-      category
-      icon
-      sort_order
-      is_active
-      created_at
-      updated_at
-    }
+    activities_by_pk(id: $id) { ${ACTIVITY_FIELDS} }
   }
 `;
 
@@ -50,33 +43,27 @@ export async function getActivityById(id: string): Promise<Activity | null> {
   return data.activities_by_pk;
 }
 
+function toRow(input: ActivityInput) {
+  return {
+    slug: input.slug.toLowerCase(),
+    name: input.name,
+    description: input.description || null,
+    parent_id: input.parent_id,
+    kind: input.parent_id ? input.kind : 'activity',
+    icon: input.icon || null,
+    sort_order: input.sort_order,
+    is_active: input.is_active,
+  };
+}
+
 export async function createActivity(input: ActivityInput, actorId: string) {
   const data = await graphqlAsAdmin<{ insert_activities_one: Activity | null }>(
     `
       mutation CreateActivity($object: activities_insert_input!) {
-        insert_activities_one(object: $object) {
-          id
-          slug
-          name
-          description
-          category
-          icon
-          sort_order
-          is_active
-        }
+        insert_activities_one(object: $object) { ${ACTIVITY_FIELDS} }
       }
     `,
-    {
-      object: {
-        slug: input.slug.toLowerCase(),
-        name: input.name,
-        description: input.description || null,
-        category: input.category,
-        icon: input.icon || null,
-        sort_order: input.sort_order,
-        is_active: input.is_active,
-      },
-    },
+    { object: toRow(input) },
   );
 
   console.info(
@@ -96,30 +83,10 @@ export async function updateActivity(id: string, input: ActivityInput, actorId: 
   const data = await graphqlAsAdmin<{ update_activities_by_pk: Activity | null }>(
     `
       mutation UpdateActivity($id: uuid!, $set: activities_set_input!) {
-        update_activities_by_pk(pk_columns: { id: $id }, _set: $set) {
-          id
-          slug
-          name
-          description
-          category
-          icon
-          sort_order
-          is_active
-        }
+        update_activities_by_pk(pk_columns: { id: $id }, _set: $set) { ${ACTIVITY_FIELDS} }
       }
     `,
-    {
-      id,
-      set: {
-        slug: input.slug.toLowerCase(),
-        name: input.name,
-        description: input.description || null,
-        category: input.category,
-        icon: input.icon || null,
-        sort_order: input.sort_order,
-        is_active: input.is_active,
-      },
-    },
+    { id, set: toRow(input) },
   );
 
   console.info(

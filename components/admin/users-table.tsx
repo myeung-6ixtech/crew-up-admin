@@ -14,10 +14,12 @@ export function UsersTable({
   users,
   total,
   search,
+  basePath,
 }: {
   users: AdminUser[];
   total: number;
   search: string;
+  basePath: '/users' | '/admin-management';
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,7 +34,8 @@ export function UsersTable({
       params.delete('q');
     }
     startTransition(() => {
-      router.replace(`/users?${params.toString()}`);
+      const queryString = params.toString();
+      router.replace(queryString ? `${basePath}?${queryString}` : basePath);
     });
   }
 
@@ -63,39 +66,47 @@ export function UsersTable({
             </TR>
           </THead>
           <TBody>
-            {users.map((user) => (
-              <TR key={user.id}>
-                <TD>
-                  <Link href={`/users/${user.id}`} className="font-medium hover:underline">
-                    {user.profile?.display_name || user.displayName || user.email}
-                  </Link>
-                  <div className="text-xs text-zinc-500">{user.email}</div>
+            {users.length ? (
+              users.map((user) => (
+                <TR key={user.id}>
+                  <TD>
+                    <Link href={`${basePath}/${user.id}`} className="font-medium hover:underline">
+                      {user.profile?.display_name || user.displayName || user.email}
+                    </Link>
+                    <div className="text-xs text-zinc-500">{user.email}</div>
+                  </TD>
+                  <TD>{user.profile?.airline?.code ?? '—'}</TD>
+                  <TD>
+                    <div className="flex flex-wrap gap-1">
+                      {user.disabled ? <Badge variant="destructive">Disabled</Badge> : null}
+                      {user.profile?.is_verified ? (
+                        <Badge variant="success">Verified</Badge>
+                      ) : (
+                        <Badge variant="warning">Unverified</Badge>
+                      )}
+                    </div>
+                  </TD>
+                  <TD>
+                    <div className="flex flex-wrap gap-1">
+                      {user.roles.map((entry) => (
+                        <Badge key={entry.role}>{entry.role}</Badge>
+                      ))}
+                    </div>
+                  </TD>
+                  <TD>{formatDate(user.createdAt)}</TD>
+                </TR>
+              ))
+            ) : (
+              <TR>
+                <TD colSpan={5} className="text-zinc-500">
+                  No accounts match this list.
                 </TD>
-                <TD>{user.profile?.airline?.code ?? '—'}</TD>
-                <TD>
-                  <div className="flex flex-wrap gap-1">
-                    {user.disabled ? <Badge variant="destructive">Disabled</Badge> : null}
-                    {user.profile?.is_verified ? (
-                      <Badge variant="success">Verified</Badge>
-                    ) : (
-                      <Badge variant="warning">Unverified</Badge>
-                    )}
-                  </div>
-                </TD>
-                <TD>
-                  <div className="flex flex-wrap gap-1">
-                    {user.roles.map((entry) => (
-                      <Badge key={entry.role}>{entry.role}</Badge>
-                    ))}
-                  </div>
-                </TD>
-                <TD>{formatDate(user.createdAt)}</TD>
               </TR>
-            ))}
+            )}
           </TBody>
         </Table>
       </div>
-      <p className="text-sm text-zinc-500">{total} users total</p>
+      <p className="text-sm text-zinc-500">{total} accounts</p>
     </div>
   );
 }

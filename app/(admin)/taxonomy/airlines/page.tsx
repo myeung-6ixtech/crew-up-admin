@@ -1,7 +1,13 @@
 import { getAirlines } from '@/lib/data/airlines';
 import { AirlinesList } from '@/components/admin/airlines-list';
+import { parsePage } from '@/components/admin/list-pagination';
 
-export default async function AirlinesTaxonomyPage() {
+export default async function AirlinesTaxonomyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
   const airlines = await getAirlines();
 
   return (
@@ -13,7 +19,7 @@ export default async function AirlinesTaxonomyPage() {
           Deactivate instead of deleting carriers referenced by profiles.
         </p>
       </div>
-      <AirlinesList airlines={airlines} />
+      <AirlinesList airlines={airlines} page={parsePage(page)} />
     </div>
   );
 }

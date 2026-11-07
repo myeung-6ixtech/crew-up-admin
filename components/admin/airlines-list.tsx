@@ -3,8 +3,10 @@ import type { Airline } from '@/lib/types/airline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
+import { ListPagination, paginate } from '@/components/admin/list-pagination';
 
-export function AirlinesList({ airlines }: { airlines: Airline[] }) {
+export function AirlinesList({ airlines, page }: { airlines: Airline[]; page: number }) {
+  const paged = paginate(airlines, page);
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -25,8 +27,8 @@ export function AirlinesList({ airlines }: { airlines: Airline[] }) {
             </TR>
           </THead>
           <TBody>
-            {airlines.length ? (
-              airlines.map((airline) => (
+            {paged.items.length ? (
+              paged.items.map((airline) => (
                 <TR key={airline.id}>
                   <TD className="font-medium">{airline.code}</TD>
                   <TD>{airline.name}</TD>
@@ -57,6 +59,14 @@ export function AirlinesList({ airlines }: { airlines: Airline[] }) {
           </TBody>
         </Table>
       </div>
+      <ListPagination
+        page={paged.page}
+        pages={paged.pages}
+        from={paged.from}
+        to={paged.to}
+        total={paged.total}
+        path="/taxonomy/airlines"
+      />
     </div>
   );
 }

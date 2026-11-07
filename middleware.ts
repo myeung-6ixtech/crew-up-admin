@@ -4,7 +4,7 @@ import { getAdminRoleFromSession, SESSION_COOKIE_OPTIONS } from '@/lib/auth/sess
 import { env } from '@/lib/env';
 import { NHOST_SESSION_KEY, parseStoredSession } from '@/lib/nhost-cookie-storage';
 
-const PUBLIC_PATHS = ['/login'];
+const PUBLIC_PATHS = ['/login', '/delete-account'];
 
 function clearSessionCookie(response: NextResponse) {
   response.cookies.delete(NHOST_SESSION_KEY);

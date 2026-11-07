@@ -1,16 +1,14 @@
 import { z } from 'zod';
 
-export const ACTIVITY_CATEGORIES = [
-  'food_drink',
-  'outdoors',
-  'nightlife',
-  'wellness',
-  'culture',
-  'general',
-] as const;
+export const ACTIVITY_KINDS = ['activity', 'interest'] as const;
+export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
-export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
+export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {
+  activity: 'Activity',
+  interest: 'Interest',
+};
 
+/** `parent_id` null makes the row a group. A group cannot be attached to an event or a profile. */
 export const activitySchema = z.object({
   slug: z
     .string()
@@ -20,19 +18,11 @@ export const activitySchema = z.object({
     .regex(/^[a-z0-9_]+$/, 'Slug must be lowercase letters, numbers, and underscores'),
   name: z.string().trim().min(2, 'Name is required'),
   description: z.string().trim().optional(),
-  category: z.enum(ACTIVITY_CATEGORIES),
+  parent_id: z.string().uuid('Choose a group').nullable(),
+  kind: z.enum(ACTIVITY_KINDS),
   icon: z.string().trim().optional(),
   sort_order: z.number().int().min(0).max(9999),
   is_active: z.boolean(),
 });
 
 export type ActivityInput = z.infer<typeof activitySchema>;
-
-export const ACTIVITY_CATEGORY_LABELS: Record<ActivityCategory, string> = {
-  food_drink: 'Food & drink',
-  outdoors: 'Outdoors',
-  nightlife: 'Nightlife',
-  wellness: 'Wellness',
-  culture: 'Culture',
-  general: 'General',
-};
