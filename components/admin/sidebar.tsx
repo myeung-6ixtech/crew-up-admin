@@ -2,7 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Calendar, Flag, Plane, Settings, ShieldBan, ShieldCheck, Users } from 'lucide-react';
+import {
+  BarChart3,
+  Calendar,
+  Flag,
+  Images,
+  Plane,
+  Settings,
+  ShieldBan,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +42,7 @@ const navItems: NavItem[] = [
   { href: '/moderation/terms', label: 'Blocked words', icon: ShieldBan },
   { href: '/taxonomy', label: 'Taxonomy', icon: Plane },
   { href: '/admin-management', label: 'Admin management', icon: ShieldCheck },
+  { href: '/media', label: 'Media library', icon: Images },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

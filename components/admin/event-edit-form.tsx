@@ -17,6 +17,7 @@ import {
   platformEventSchema,
 } from '@/lib/schemas/event.schema';
 import { ActivityPicker } from '@/components/admin/activity-picker-dialog';
+import { MediaPickerField } from '@/components/admin/media-picker-dialog';
 import { Button } from '@/components/ui/button';
 import { Input, Label, Textarea } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -51,6 +52,9 @@ export function EventEditForm({
   const [languages, setLanguages] = useState(event?.languages.join(', ') ?? 'en');
   const [tags, setTags] = useState(event?.tags.join('\n') ?? '');
   const [featuredUntil, setFeaturedUntil] = useState(toLocalInputValue(event?.featured_until));
+  const [featuredImageFileId, setFeaturedImageFileId] = useState<string | null>(
+    event?.featured_image_file_id ?? null,
+  );
   const [isPublished, setIsPublished] = useState(event?.is_published ?? true);
   const [selectedActivities, setSelectedActivities] = useState<string[]>(
     event?.eventActivities?.map((row) => row.activity_id) ?? [],
@@ -78,6 +82,7 @@ export function EventEditForm({
         tags: parseTags(tags),
         is_published: isPublished,
         featured_until: featuredUntil ? new Date(featuredUntil).toISOString() : null,
+        featured_image_file_id: featuredImageFileId,
       });
 
       if (mode === 'create') {
@@ -101,129 +106,158 @@ export function EventEditForm({
   }
 
   return (
-    <Card className="max-w-3xl">
-      <CardHeader>
-        <CardTitle>{mode === 'create' ? 'Create platform event' : 'Edit platform event'}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
-              <Input
-                id="capacity"
-                type="number"
-                min={1}
-                value={capacity}
-                onChange={(e) => setCapacity(e.target.value)}
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{mode === 'create' ? 'Event details' : 'Edit details'}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-36"
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="capacity">Capacity</Label>
+                  <Input
+                    id="capacity"
+                    type="number"
+                    min={1}
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="venue_name">Venue name</Label>
+                  <Input
+                    id="venue_name"
+                    value={venueName}
+                    onChange={(e) => setVenueName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="venue_address">Venue address</Label>
+                  <Input
+                    id="venue_address"
+                    value={venueAddress}
+                    onChange={(e) => setVenueAddress(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="starts_at">Starts at</Label>
+                  <Input
+                    id="starts_at"
+                    type="datetime-local"
+                    value={startsAt}
+                    onChange={(e) => setStartsAt(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ends_at">Ends at</Label>
+                  <Input
+                    id="ends_at"
+                    type="datetime-local"
+                    value={endsAt}
+                    onChange={(e) => setEndsAt(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="languages">Languages</Label>
+                <Input
+                  id="languages"
+                  value={languages}
+                  onChange={(e) => setLanguages(e.target.value)}
+                  placeholder="en, th"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tags">Modifier tags</Label>
+                <Textarea
+                  id="tags"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="alcohol_free"
+                />
+                <p className="text-xs text-zinc-500">Dietary/safety tags, not activity types.</p>
+              </div>
+              <ActivityPicker
+                activities={activities}
+                selectedIds={selectedActivities}
+                onChange={setSelectedActivities}
               />
-            </div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="venue_name">Venue name</Label>
-              <Input
-                id="venue_name"
-                value={venueName}
-                onChange={(e) => setVenueName(e.target.value)}
+            </CardContent>
+          </Card>
+        </div>
+
+        <aside className="space-y-4 lg:sticky lg:top-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Publish</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="published">Published</Label>
+                <Switch checked={isPublished} onCheckedChange={setIsPublished} id="published" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="featured_until">Featured until</Label>
+                <Input
+                  id="featured_until"
+                  type="datetime-local"
+                  value={featuredUntil}
+                  onChange={(e) => setFeaturedUntil(e.target.value)}
+                />
+                <p className="text-xs text-zinc-500">Pins this event higher while the date is in the future.</p>
+              </div>
+              {error ? <p className="text-sm text-red-600">{error}</p> : null}
+              <div className="flex flex-col gap-2">
+                <Button type="submit" disabled={pending} className="w-full">
+                  {pending ? 'Saving…' : mode === 'create' ? 'Publish event' : 'Update'}
+                </Button>
+                <Link href="/events/events-list" className="w-full">
+                  <Button variant="outline" type="button" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Featured image</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MediaPickerField
+                fileId={featuredImageFileId}
+                onChange={setFeaturedImageFileId}
+                compact
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="venue_address">Venue address</Label>
-              <Input
-                id="venue_address"
-                value={venueAddress}
-                onChange={(e) => setVenueAddress(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="starts_at">Starts at</Label>
-              <Input
-                id="starts_at"
-                type="datetime-local"
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ends_at">Ends at</Label>
-              <Input
-                id="ends_at"
-                type="datetime-local"
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="languages">Languages</Label>
-            <Input
-              id="languages"
-              value={languages}
-              onChange={(e) => setLanguages(e.target.value)}
-              placeholder="en, th"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tags">Modifier tags</Label>
-            <Textarea
-              id="tags"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="alcohol_free"
-            />
-            <p className="text-xs text-zinc-500">Dietary/safety tags, not activity types.</p>
-          </div>
-          <ActivityPicker
-            activities={activities}
-            selectedIds={selectedActivities}
-            onChange={setSelectedActivities}
-          />
-          <div className="space-y-2">
-            <Label htmlFor="featured_until">Featured until</Label>
-            <Input
-              id="featured_until"
-              type="datetime-local"
-              value={featuredUntil}
-              onChange={(e) => setFeaturedUntil(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <Switch checked={isPublished} onCheckedChange={setIsPublished} id="published" />
-            <Label htmlFor="published">Published</Label>
-          </div>
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <div className="flex gap-2">
-            <Button type="submit" disabled={pending}>
-              {pending ? 'Saving…' : mode === 'create' ? 'Create event' : 'Save changes'}
-            </Button>
-            <Link href="/events/events-list">
-              <Button variant="outline" type="button">
-                Cancel
-              </Button>
-            </Link>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
+    </form>
   );
 }

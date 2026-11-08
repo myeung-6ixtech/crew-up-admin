@@ -3,7 +3,7 @@ import 'server-only';
 import { createServerClient, type NhostClient } from '@nhost/nhost-js';
 import type { StoredSession } from '@nhost/nhost-js/session';
 import { cookies } from 'next/headers';
-import { SESSION_COOKIE_OPTIONS } from '@/lib/auth/session';
+import { REMEMBER_COOKIE, sessionCookieOptions } from '@/lib/auth/session';
 import { env } from '@/lib/env';
 import { NHOST_SESSION_KEY, parseStoredSession } from '@/lib/nhost-cookie-storage';
 
@@ -31,7 +31,11 @@ export async function createNhostServerClient() {
       (value) => {
         requestSession = value;
         try {
-          cookieStore.set(NHOST_SESSION_KEY, JSON.stringify(value), SESSION_COOKIE_OPTIONS);
+          cookieStore.set(
+            NHOST_SESSION_KEY,
+            JSON.stringify(value),
+            sessionCookieOptions(cookieStore.get(REMEMBER_COOKIE)?.value),
+          );
         } catch {
           // Server Components cannot always persist cookies; in-memory is enough for this request.
         }
@@ -40,6 +44,7 @@ export async function createNhostServerClient() {
         requestSession = null;
         try {
           cookieStore.delete(NHOST_SESSION_KEY);
+          cookieStore.delete(REMEMBER_COOKIE);
         } catch {
           // Ignore when cookie mutation is not allowed in this context.
         }

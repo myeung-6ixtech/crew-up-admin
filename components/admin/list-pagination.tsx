@@ -40,7 +40,12 @@ export function ListPagination({
   path: string;
 }) {
   function href(nextPage: number) {
-    return nextPage <= 1 ? path : `${path}?page=${nextPage}`;
+    const [pathname, query = ''] = path.split('?');
+    const params = new URLSearchParams(query);
+    if (nextPage <= 1) params.delete('page');
+    else params.set('page', String(nextPage));
+    const qs = params.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
   }
 
   return (

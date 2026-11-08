@@ -30,3 +30,18 @@ export const SESSION_COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'strict' as const,
 };
+
+/** Set when the user checks "Remember for the next 48 hours" on the login form. Value is an expiry timestamp in ms. */
+export const REMEMBER_COOKIE = 'crewupAdminRemember';
+export const REMEMBER_FOR_MS = 48 * 60 * 60 * 1000;
+
+export function sessionCookieOptions(rememberUntil: string | undefined) {
+  const until = Number(rememberUntil);
+  if (!Number.isFinite(until) || until <= Date.now()) {
+    return SESSION_COOKIE_OPTIONS;
+  }
+  return {
+    ...SESSION_COOKIE_OPTIONS,
+    maxAge: Math.max(1, Math.floor((until - Date.now()) / 1000)),
+  };
+}

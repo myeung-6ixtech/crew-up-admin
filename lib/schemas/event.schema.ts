@@ -14,6 +14,7 @@ export const platformEventSchema = z.object({
   tags: z.array(z.string().trim().min(1)),
   is_published: z.boolean(),
   featured_until: z.string().optional().nullable(),
+  featured_image_file_id: z.string().uuid().optional().nullable(),
 });
 
 export type PlatformEventInput = z.infer<typeof platformEventSchema>;

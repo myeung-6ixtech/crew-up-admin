@@ -61,6 +61,7 @@ export async function updatePlatformEventViaApi(
           is_published
           published_at
           featured_until
+          featured_image_file_id
           creator_id
           created_at
           updated_at
@@ -83,6 +84,7 @@ export async function updatePlatformEventViaApi(
         is_published: input.is_published,
         published_at: publishedAt,
         featured_until: input.featured_until || null,
+        featured_image_file_id: input.featured_image_file_id || null,
       },
     },
   );

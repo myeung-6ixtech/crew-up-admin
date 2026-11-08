@@ -21,6 +21,7 @@ const LIST_PLATFORM_EVENTS_QUERY = `
       host_type
       is_published
       featured_until
+      featured_image_file_id
       created_at
       attendees_aggregate {
         aggregate {
@@ -50,6 +51,7 @@ const GET_PLATFORM_EVENT_QUERY = `
       is_published
       published_at
       featured_until
+      featured_image_file_id
       creator_id
       created_at
       updated_at
@@ -122,6 +124,7 @@ export async function updatePlatformEvent(
         is_published: input.is_published,
         published_at: publishedAt,
         featured_until: input.featured_until || null,
+        featured_image_file_id: input.featured_image_file_id || null,
       },
     },
   );

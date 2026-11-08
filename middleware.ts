@@ -1,6 +1,6 @@
 import { createServerClient } from '@nhost/nhost-js';
 import { NextResponse, type NextRequest } from 'next/server';
-import { getAdminRoleFromSession, SESSION_COOKIE_OPTIONS } from '@/lib/auth/session';
+import { getAdminRoleFromSession, REMEMBER_COOKIE, sessionCookieOptions } from '@/lib/auth/session';
 import { env } from '@/lib/env';
 import { NHOST_SESSION_KEY, parseStoredSession } from '@/lib/nhost-cookie-storage';
 
@@ -8,6 +8,7 @@ const PUBLIC_PATHS = ['/login', '/delete-account'];
 
 function clearSessionCookie(response: NextResponse) {
   response.cookies.delete(NHOST_SESSION_KEY);
+  response.cookies.delete(REMEMBER_COOKIE);
 }
 
 function redirectToLogin(request: NextRequest, pathname: string) {
@@ -40,7 +41,11 @@ export async function middleware(request: NextRequest) {
     storage: {
       get: () => parseStoredSession(request.cookies.get(NHOST_SESSION_KEY)?.value),
       set: (value) => {
-        response.cookies.set(NHOST_SESSION_KEY, JSON.stringify(value), SESSION_COOKIE_OPTIONS);
+        response.cookies.set(
+          NHOST_SESSION_KEY,
+          JSON.stringify(value),
+          sessionCookieOptions(request.cookies.get(REMEMBER_COOKIE)?.value),
+        );
       },
       remove: () => {
         clearSessionCookie(response);

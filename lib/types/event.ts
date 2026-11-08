@@ -15,6 +15,7 @@ export type PlatformEvent = {
   is_published: boolean;
   published_at: string | null;
   featured_until: string | null;
+  featured_image_file_id: string | null;
   creator_id: string;
   created_at: string;
   updated_at: string;
@@ -39,4 +40,5 @@ export type PlatformEventInput = {
   tags: string[];
   is_published: boolean;
   featured_until?: string | null;
+  featured_image_file_id?: string | null;
 };
